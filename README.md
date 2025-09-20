@@ -1,8 +1,8 @@
 # Assignment 2: Document Similarity using MapReduce
 
-**Name:** 
+**Name: Thejas Prabakaran** 
 
-**Student ID:** 
+**Student ID: 8014149982** 
 
 ## Approach and Implementation
 
