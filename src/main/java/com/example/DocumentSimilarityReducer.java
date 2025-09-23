@@ -1,8 +1,3 @@
-// package com.example;
-
-// public class DocumentSimilarityReducer {
-    
-// }
 package com.example;
 
 import org.apache.hadoop.io.DoubleWritable;
@@ -13,7 +8,6 @@ import java.io.IOException;
 import java.util.*;
 
 public class DocumentSimilarityReducer extends Reducer<Text, Text, Text, DoubleWritable> {
-    // Global (for this single reducer task)
     private final Map<String,Integer> docSizes = new HashMap<>();
     private final Map<String,Integer> pairIntersections = new HashMap<>();
 
@@ -25,9 +19,8 @@ public class DocumentSimilarityReducer extends Reducer<Text, Text, Text, DoubleW
         String k = key.toString();
 
         if (k.startsWith("D\t")) {
-            // Key: "D\t<docId>", Values: ["<size>"]
             String docId = k.substring(2);
-            for (Text v : vals) { // usually one
+            for (Text v : vals) {
                 try {
                     docSizes.put(docId, Integer.parseInt(v.toString()));
                 } catch (NumberFormatException ignored) {}
@@ -36,7 +29,6 @@ public class DocumentSimilarityReducer extends Reducer<Text, Text, Text, DoubleW
         }
 
         if (k.startsWith("W\t")) {
-            // Key: "W\t<word>", Values: [docId...]
             HashSet<String> uniqDocs = new HashSet<>();
             for (Text v : vals) uniqDocs.add(v.toString());
 
@@ -53,39 +45,15 @@ public class DocumentSimilarityReducer extends Reducer<Text, Text, Text, DoubleW
         }
     }
 
-    // @Override
-    // protected void cleanup(Context ctx) throws IOException, InterruptedException {
-    //     for (Map.Entry<String,Integer> e : pairIntersections.entrySet()) {
-    //         String pair = e.getKey();
-    //         int inter = e.getValue();
-
-    //         int comma = pair.indexOf(',');
-    //         String A = pair.substring(0, comma);
-    //         String B = pair.substring(comma + 1);
-
-    //         Integer aSize = docSizes.get(A);
-    //         Integer bSize = docSizes.get(B);
-    //         if (aSize == null || bSize == null) continue;
-
-    //         int union = aSize + bSize - inter;
-    //         double j = (union == 0) ? 0.0 : (inter * 1.0) / union;
-
-    //         outKey.set(pair);
-    //         outVal.set(j);
-    //         ctx.write(outKey, outVal); // "A,B" \t jaccard
-    //     }
-    // }
-
     @Override
     protected void cleanup(Context ctx) throws IOException, InterruptedException {
-        // Build a sorted list of ALL documents we saw sizes for
         List<String> docs = new ArrayList<>(docSizes.keySet());
         Collections.sort(docs);
 
         for (int i = 0; i < docs.size(); i++) {
             for (int j = i + 1; j < docs.size(); j++) {
                 String A = docs.get(i), B = docs.get(j);
-                String pairKey = A + "," + B; // matches how you stored intersections
+                String pairKey = A + "," + B;
                 int inter = pairIntersections.getOrDefault(pairKey, 0);
 
                 int aSize = docSizes.getOrDefault(A, 0);

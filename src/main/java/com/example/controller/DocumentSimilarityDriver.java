@@ -27,7 +27,6 @@ public class DocumentSimilarityDriver {
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(DoubleWritable.class);
 
-        // IMPORTANT: single reducer task so all state is in one place
         job.setNumReduceTasks(1);
 
         FileInputFormat.addInputPath(job, new Path(args[0]));

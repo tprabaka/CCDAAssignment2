@@ -7,19 +7,17 @@
 ## Approach and Implementation
 
 ### Mapper Design
-[Explain the logic of your Mapper class. What is its input key-value pair? What does it emit as its output key-value pair? How does it help in solving the overall problem?]
+So the mapper class produces two types of key value pair for each text input that comes in. The mapper class recieves each line of the input text file as the text input for example if the input text file is like "Document1 Lorem ipsum ..." , Then input will be Text = "Document1 Lorem ipsum ...". Now this input text is split into list of string by spaces. Then the first item in the list will be "Document1", this is one type of key value pair. Then the list of string is converted into small case and the symbols are removed from the string in the list. Then a Hashset is created out of rest of the strings to get the set of non duplicate strings. The hash set is assigned the document ID which the key will be unique string and the document id we got form input text, this is the another type of key value pair. The first key value pair contains total number of words in the respective document. As the solution I am designing contains only one stage of map reduce, I would like to know the total number of unique words in the document and the words presence in each of the document to compute intersection.
 
 ### Reducer Design
-[Explain the logic of your Reducer class. What is its input key-value pair? How does it process the values for a given key? What does it emit as the final output? How do you calculate the Jaccard Similarity here?]
+The Reducer takes keys of the form "D\t<docId>" with document sizes and "W\t<word>" with lists of documents containing that word. For "D\t", it stores each document’s size. For "W\t", it finds all document pairs sharing the word and increments their intersection count. In cleanup, it computes Jaccard similarity for every document pair using the fomula outputs <docA,docB> with the similarity score
 
 ### Overall Data Flow
-[Describe how data flows from the initial input files, through the Mapper, shuffle/sort phase, and the Reducer to produce the final output.]
+The input files contain documents with an ID and words. The Mapper emits (W\tword, docId) for each unique word and (D\tdocId, docSize) once per document. In the shuffle/sort phase, all values are grouped by key so the Reducer sees all docs for a word and all sizes for a document. The Reducer records document sizes, counts intersections for document pairs sharing words, and in cleanup computes Jaccard similarity = intersection ÷ union. The final output is each document pair with its similarity score.
 
 ---
 
 ## Setup and Execution
-
-### ` Note: The below commands are the ones used for the Hands-on. You need to edit these commands appropriately towards your Assignment to avoid errors. `
 
 ### 1. **Start the Hadoop Cluster**
 
@@ -83,10 +81,10 @@ hadoop fs -put ./input.txt /input/data
 
 ### 8. **Execute the MapReduce Job**
 
-Run your MapReduce job using the following command: Here I got an error saying output already exists so I changed it to output1 instead as destination folder
+Run your MapReduce job using the following command:
 
 ```bash
-hadoop jar /opt/hadoop-3.2.1/share/hadoop/mapreduce/DocumentSimilarity-0.0.1-SNAPSHOT.jar com.example.controller.DocumentSimilarityDriver /input/data/input.txt /output1
+hadoop jar /opt/hadoop-3.2.1/share/hadoop/mapreduce/DocumentSimilarity-0.0.1-SNAPSHOT.jar com.example.controller.DocumentSimilarityDriver /input/data/input.txt /output
 ```
 
 ### 9. **View the Output**
@@ -120,7 +118,44 @@ To copy the output from HDFS to your local machine:
 
 ## Challenges and Solutions
 
-[Describe any challenges you faced during this assignment. This could be related to the algorithm design (e.g., how to generate pairs), implementation details (e.g., data structures, debugging in Hadoop), or environmental issues. Explain how you overcame these challenges.]
+So regarding the challenges while doing this assignment, it started from first to end. First challenge was that the framework to write and understand code was very tough what each argument mean and we are not using Java data types. Then after learning about them, found out these programs do not execute sequentially like not one mapper and one reducer therre will be mutiple instances of them. So the the code we right have to be independant so as to execute the the necessary tasks. Then came desiging the solution, the concept of jaccardian similarity is very easy and straightforward in classical programming but in this case we have carefully design the solution so as to not cause error because of the nature of execution of code in this framework. After finalising on the idea on how to do then came the problems associated with data storage because in my idea I need to have something to store the data that is global so have to find the work around it . Then I executed the code the code was to run but was facing the issues with the output. I got wrong output but the logic was correct, then I found out as the reducer task finish executing in different times the final data received is sometime incomplete to compute the simialrity sdcore then the required changes were made. Finally some challenges while experimenting the different datasets which I made throughafter brushing ioff old OS concepts. I faced no environment issues both while executing in local or in codespaes
+
+---
+
+## Analysis on 3 Data Nodes vs 1 Data nodes
+
+I could not find any big difference in performace while experimenting with my datasets. It may be due to less number of document. But I felt the 3 data nodes executed them a bit faster and easily to complete the program compared to 1 nodes.
+
+---
+
+## Results and Input Dataset Information
+
+I created a dataset generator Python file to create a text file with the N number of words (randomly generated) and the required number of documents.  
+The input datasets I used are in the `shared-folder`, and the results I obtained are also stored in the same folder.
+I have also a folder created to upload all the screenshots of output from the execution and experimenting. It will be available in the "Screenshots" folder, the file name will denote what dataset where dataset 1 - denote 1000 words dataset, dataset 2- 3000 word dataset and so on.
+
+
+```text
+.
+├── shared-folder
+│   ├── input
+│   │   └── data
+│   │       ├── input.txt        // Small sample dataset
+│   │       ├── inputTest1.txt   // 1000 words dataset
+│   │       ├── inputTest2.txt   // 3000 words dataset
+│   │       └── inputTest3.txt   // 5000 words dataset
+│   ├── output
+│   │   ├── 1_Node               // 1 Node Execution Output
+│   │   │   ├── output1_1        // 1000 words dataset
+│   │   │   ├── output1_2        // 3000 words dataset
+│   │   │   └── output1_3        // 5000 words dataset
+│   │   └── 3_Node               // 3 Node Execution Output
+│   │       ├── output           // Small sample dataset output
+│   │       ├── output1          // 1000 words dataset
+│   │       ├── output2          // 3000 words dataset
+│   │       └── output3          // 5000 words dataset
+└── Screenshots                  // Screenshots of execution results
+```
 
 ---
 ## Sample Input
@@ -139,4 +174,3 @@ Document3 Sample text with different words
 "Document1, Document3 Similarity: 0.42"
 "Document2, Document3 Similarity: 0.50"
 ```
-## Obtained Output: (Place your obtained output here.)
